@@ -6,28 +6,28 @@
 
 // Data
 const account1 = {
-  owner: 'Jonas Schmedtmann',
+  owner: 'a',
   movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
   interestRate: 1.2, // %
   pin: 1111,
 };
 
 const account2 = {
-  owner: 'Jessica Davis',
+  owner: 'b',
   movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
   interestRate: 1.5,
   pin: 2222,
 };
 
 const account3 = {
-  owner: 'Steven Thomas Williams',
+  owner: 'c',
   movements: [200, -200, 340, -300, -20, 50, 400, -460],
   interestRate: 0.7,
   pin: 3333,
 };
 
 const account4 = {
-  owner: 'Sarah Smith',
+  owner: 'd',
   movements: [430, 1000, 700, 50, 90],
   interestRate: 1,
   pin: 4444,
@@ -62,11 +62,38 @@ const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
 /////////////////////////////////////////////////
+const updateAllInfo = function(currentAccount){
+  displayMovements(currentAccount)
+  calculateDisplayBalance(currentAccount)
+  calculateDisplaySummary(currentAccount)
+}
+let currentAccount;
+
+btnLogin.addEventListener('click', function(e){
+  e.preventDefault()
+
+  currentAccount = accounts.find(acc => acc.owner === inputLoginUsername.value)
+
+  if(currentAccount?.pin === Number(inputLoginPin.value)){
+
+    labelWelcome.textContent = `Welcome back ${currentAccount.owner.split(' ')[0]}`
+    containerApp.style.opacity = 100
+    inputLoginUsername.value = inputLoginPin.value = ''
+    inputLoginPin.blur()
+    updateAllInfo(currentAccount)
+  } else {
+    containerApp.style.opacity = 0
+    labelWelcome.textContent = 'Log in to get started'
+  }
+  
+})
 
 
-const displayMovements = function (movements) {
+
+
+const displayMovements = function (acc) {
    containerMovements.innerHTML = ''
-  movements.forEach((mov, i) => {
+  acc.movements.forEach((mov, i) => {
  
     const type = mov > 0 ?'deposit' : 'withdrawal'
       const html = `
@@ -80,27 +107,47 @@ const displayMovements = function (movements) {
   });
 }
 
-const calculateDisplayBalance = function (movements) {
-  const balance = movements.reduce((acc, mov) => acc + mov, 0)
-  labelBalance.textContent  =  ` ${balance} EUR`
+const calculateDisplayBalance = function (acc) {
+  acc.balance = acc.movements.reduce((acc, mov) => acc + mov, 0)
+  labelBalance.textContent  =  ` ${acc.balance} EUR`
 }
 
-const calculateDisplaySummary = function (movements) {
-  const income = movements.filter(mov => mov > 0).reduce((acc, mov) => acc + mov, 0)
+const calculateDisplaySummary = function (acc) {
+  const income = acc.movements.filter(mov => mov > 0).reduce((acc, mov) => acc + mov, 0)
   labelSumIn.textContent = `${income} EUR`
 
-  const out = movements.filter(mov => mov < 0).reduce((acc, mov) => acc + mov, 0)
+  const out = acc.movements.filter(mov => mov < 0).reduce((acc, mov) => acc + mov, 0)
   labelSumOut.textContent = `${Math.abs(out)} EUR`
 
-  const interest = movements.filter(mov => mov > 0).map(deposit => (deposit*1.2)/100).reduce((acc, dep) => acc+dep, 0)
+  const interest = acc.movements.filter(mov => mov > 0).map(deposit => (deposit * acc.interestRate)/100).reduce((acc, dep) => acc+dep, 0)
   labelSumInterest.textContent = `${interest} EUR`
 
 }
 
-displayMovements(account1.movements)
-calculateDisplayBalance(account1.movements)
-calculateDisplaySummary(account1.movements)
 
+btnTransfer.addEventListener('click', function(e){
+  e.preventDefault()
+
+  const amount = Number(inputTransferAmount.value)
+  const transerTo = inputTransferTo.value
+
+  const transferToAccount = accounts.find(acc => acc.owner === transerTo)
+  inputTransferAmount.value = inputTransferTo.value = ''
+  if(amount > 0 &&
+    currentAccount.owner !== transferToAccount.owner &&
+    currentAccount.balance >= amount
+  ){
+    currentAccount.movements.push(-amount)
+    transferToAccount.movements.push(amount)
+    updateAllInfo(currentAccount)
+    
+  }else{
+    console.log('invalid info');
+    
+  }
+  
+  
+})
 
 /////////////////////////////////////////////////
 // LECTURES
